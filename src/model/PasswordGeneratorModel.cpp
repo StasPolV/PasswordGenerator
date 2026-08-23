@@ -26,52 +26,94 @@ void PasswordGeneratorModel::ValidateString(QString& s, const Alphabets& alphabe
 {
 	QRandomGenerator* rng = QRandomGenerator::system();
 
-	struct Category
+	enum class Category
+	{
+		Digit,
+		Upper,
+		Lower,
+		Symbol,
+		None
+	};
+
+	auto classify = [&](QChar c) -> Category
+	{
+		if (c.isDigit())
+			return Category::Digit;
+		if (c.isUpper())
+			return Category::Upper;
+		if (c.isLower())
+			return Category::Lower;
+		if (alphabets.symbols.contains(c))
+			return Category::Symbol;
+		return Category::None;
+	};
+
+	std::array<std::vector<int>, 4> positions_by_category;
+	for (int i = 0; i < s.length(); ++i)
+	{
+		Category cat = classify(s[i]);
+		if (cat != Category::None)
+			positions_by_category[static_cast<int>(cat)].push_back(i);
+	}
+
+	struct CategoryInfo
 	{
 		bool enabled;
-		bool (*predicate)(QChar, const QString&);
+		Category cat;
 		const QString* alphabet;
 	};
-
-	auto has_digit = [](QChar c)
-	{
-		return c.isDigit();
-	};
-	auto has_upper = [](QChar c)
-	{
-		return c.isUpper();
-	};
-	auto has_lower = [](QChar c)
-	{
-		return c.isLower();
-	};
-	auto has_symbol = [&](QChar c)
-	{
-		return alphabets.symbols.contains(c);
-	};
+	const std::array<CategoryInfo, 4> categories = {
+	        {
+             {m_digits, Category::Digit, &alphabets.digits},
+             {m_upper_case, Category::Upper, &alphabets.upper},
+             {m_lower_case, Category::Lower, &alphabets.lower},
+             {m_symbols, Category::Symbol, &alphabets.symbols},
+	         }
+    };
 
 	std::vector<const QString*> missing_alphabets;
+	std::vector<bool> is_protected(s.length(), false);
 
-	if (m_digits && !std::any_of(s.begin(), s.end(), has_digit))
-		missing_alphabets.push_back(&alphabets.digits);
-	if (m_upper_case && !std::any_of(s.begin(), s.end(), has_upper))
-		missing_alphabets.push_back(&alphabets.upper);
-	if (m_lower_case && !std::any_of(s.begin(), s.end(), has_lower))
-		missing_alphabets.push_back(&alphabets.lower);
-	if (m_symbols && !std::any_of(s.begin(), s.end(), has_symbol))
-		missing_alphabets.push_back(&alphabets.symbols);
+	for (const auto& info : categories)
+	{
+		if (!info.enabled)
+			continue;
+
+		auto& positions = positions_by_category[static_cast<int>(info.cat)];
+		if (positions.empty())
+		{
+			missing_alphabets.push_back(info.alphabet);
+		}
+		else
+		{
+			int idx = rng->bounded(static_cast<int>(positions.size()));
+			is_protected[positions[idx]] = true;
+		}
+	}
 
 	if (missing_alphabets.empty())
 		return;
 
-	std::vector<int> positions(s.length());
-	std::iota(positions.begin(), positions.end(), 0);
-	std::shuffle(positions.begin(), positions.end(), *rng);
+	std::vector<int> free_positions;
+	free_positions.reserve(s.length());
+	for (int i = 0; i < s.length(); ++i)
+	{
+		if (!is_protected[i])
+			free_positions.push_back(i);
+	}
+
+	if (missing_alphabets.size() > free_positions.size())
+	{
+		qWarning() << "Password length too small to satisfy all categories safely";
+		missing_alphabets.resize(free_positions.size());
+	}
+
+	std::shuffle(free_positions.begin(), free_positions.end(), *rng);
 
 	for (size_t i = 0; i < missing_alphabets.size(); ++i)
 	{
 		const QString& alphabet = *missing_alphabets[i];
-		int pos = positions[i];
+		int pos = free_positions[i];
 		s[pos] = alphabet[rng->bounded(alphabet.length())];
 	}
 }
