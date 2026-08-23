@@ -15,4 +15,4 @@ qt_add_executable(PasswordGenerator src/main.cpp)
 add_subdirectory(src/model)
 add_subdirectory(src/gui)
 
-target_link_libraries(PasswordGenerator PRIVATE Qt6::Core Qt6::Widgets)
+target_link_libraries(PasswordGenerator PRIVATE GUI Qt6::Core Qt6::Widgets)

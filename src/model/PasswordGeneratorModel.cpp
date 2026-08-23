@@ -1,5 +1,6 @@
 #include "PasswordGeneratorModel.h"
 
+#include <QDebug>
 #include <QRandomGenerator>
 
 #include <algorithm>
