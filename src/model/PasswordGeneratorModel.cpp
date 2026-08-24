@@ -9,12 +9,11 @@
 namespace
 {
 	static constexpr int kMinLength = 6;
-	static constexpr int kStandartLength = 8;
 }  // namespace
 
 PasswordGeneratorModel::PasswordGeneratorModel(QObject* parent)
-    : QObject(parent), m_length(std::max(kStandartLength, kMinLength)), m_upper_case(true),
-      m_lower_case(true), m_digits(true), m_symbols(true)
+    : QObject(parent), m_length(kMinLength), m_upper_case(true), m_lower_case(true), m_digits(true),
+      m_symbols(true)
 {}
 
 PasswordGeneratorModel::PasswordGeneratorModel(int length, bool upper_case, bool lower_case,

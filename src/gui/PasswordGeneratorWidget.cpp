@@ -27,6 +27,9 @@ PasswordGeneratorWidget::PasswordGeneratorWidget(QWidget* parent) : QWidget(pare
 	QToolButton* copy_button = new QToolButton(this);
 	copy_button->setMaximumHeight(100);
 
+	connect(create_button, &QToolButton::pressed, this,
+	        &PasswordGeneratorWidget::GenerateRequested);
+
 	copy_button->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 	copy_button->setText("Copy");
 
@@ -89,7 +92,6 @@ PasswordGeneratorWidget::PasswordGeneratorWidget(QWidget* parent) : QWidget(pare
 					        if (b->isChecked())
 					        {
 						        any_checked = true;
-						        emit GenerateRequested();
 						        break;
 					        }
 				        }
@@ -100,12 +102,11 @@ PasswordGeneratorWidget::PasswordGeneratorWidget(QWidget* parent) : QWidget(pare
 					        btn->blockSignals(false);
 				        }
 			        }
-			        else
-			        {
-				        emit GenerateRequested();
-			        }
 		        });
 	}
 }
 
-void PasswordGeneratorWidget::SetPassword(QString password) {}
+void PasswordGeneratorWidget::SetPassword(QString password)
+{
+	m_password_enter->setText(password);
+}

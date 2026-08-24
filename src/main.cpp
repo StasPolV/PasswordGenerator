@@ -1,3 +1,5 @@
+#include "PasswordGeneratorController.h"
+#include "PasswordGeneratorModel.h"
 #include "PasswordGeneratorWidget.h"
 
 #include <QApplication>
@@ -10,6 +12,8 @@ int main(int argc, char* argv[])
 
 	PasswordGeneratorWidget widget;
 	widget.show();
+	PasswordGeneratorModel model;
+	PasswordGeneratorController controller(model, widget);
 
 	return app.exec();
 }
