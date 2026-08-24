@@ -4,11 +4,13 @@
 #include <QRandomGenerator>
 
 #include <algorithm>
-#include <string>
+#include <array>
+#include <vector>
 
 namespace
 {
-	static constexpr int kMinLength = 6;
+	constexpr int kMinLength = 6;
+	constexpr int kMaxLength = 32;
 }  // namespace
 
 PasswordGeneratorModel::PasswordGeneratorModel(QObject* parent)
@@ -18,9 +20,49 @@ PasswordGeneratorModel::PasswordGeneratorModel(QObject* parent)
 
 PasswordGeneratorModel::PasswordGeneratorModel(int length, bool upper_case, bool lower_case,
                                                bool digits, bool symbols, QObject* parent)
-    : QObject(parent), m_length(std::max(length, kMinLength)), m_upper_case(upper_case),
-      m_lower_case(lower_case), m_digits(digits), m_symbols(symbols)
+    : QObject(parent), m_length(std::clamp(length, kMinLength, kMaxLength)),
+      m_upper_case(upper_case), m_lower_case(lower_case), m_digits(digits), m_symbols(symbols)
 {}
+
+int PasswordGeneratorModel::MinLength()
+{
+	return kMinLength;
+}
+
+int PasswordGeneratorModel::MaxLength()
+{
+	return kMaxLength;
+}
+
+void PasswordGeneratorModel::SetLength(int length)
+{
+	m_length = std::clamp(length, kMinLength, kMaxLength);
+	GeneratePassword();
+}
+
+void PasswordGeneratorModel::SetUpperCase(bool upper_case)
+{
+	m_upper_case = upper_case;
+	GeneratePassword();
+}
+
+void PasswordGeneratorModel::SetLowerCase(bool lower_case)
+{
+	m_lower_case = lower_case;
+	GeneratePassword();
+}
+
+void PasswordGeneratorModel::SetDigits(bool digits)
+{
+	m_digits = digits;
+	GeneratePassword();
+}
+
+void PasswordGeneratorModel::SetSymbols(bool symbols)
+{
+	m_symbols = symbols;
+	GeneratePassword();
+}
 
 void PasswordGeneratorModel::ValidateString(QString& s, const Alphabets& alphabets) const
 {
@@ -123,10 +165,17 @@ void PasswordGeneratorModel::GeneratePassword()
 	QRandomGenerator* rng = QRandomGenerator::system();
 	const Alphabets alphabets = BuildAlphabets();
 
+	const int alphabet_size = alphabets.combined.length();
+	if (alphabet_size == 0)
+	{
+		qWarning() << "No character set is enabled, nothing to generate from";
+		emit PasswordGenerated(QString());
+		return;
+	}
+
 	QString password;
 	password.resize(m_length);
 
-	const int alphabet_size = alphabets.combined.length();
 	for (int i = 0; i < m_length; ++i)
 	{
 		password[i] = alphabets.combined[rng->bounded(alphabet_size)];

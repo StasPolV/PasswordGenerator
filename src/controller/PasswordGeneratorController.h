@@ -14,6 +14,8 @@ public:
 	                            QObject* parent = nullptr);
 
 private:
+	void SyncWidgetWithModel();
+
 	PasswordGeneratorModel& m_model;
 	PasswordGeneratorWidget& m_widget;
 };

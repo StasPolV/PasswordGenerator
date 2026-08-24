@@ -20,4 +20,19 @@ PasswordGeneratorController::PasswordGeneratorController(PasswordGeneratorModel&
 	        &PasswordGeneratorModel::SetSymbols);
 	connect(&m_widget, &PasswordGeneratorWidget::LengthChanged, &m_model,
 	        &PasswordGeneratorModel::SetLength);
+
+	SyncWidgetWithModel();
+	m_model.GeneratePassword();
+}
+
+void PasswordGeneratorController::SyncWidgetWithModel()
+{
+	m_widget.SetLengthRange(PasswordGeneratorModel::MinLength(),
+	                        PasswordGeneratorModel::MaxLength());
+	m_widget.SetLength(m_model.Length());
+
+	m_widget.SetUpperCase(m_model.UpperCase());
+	m_widget.SetLowerCase(m_model.LowerCase());
+	m_widget.SetDigits(m_model.Digits());
+	m_widget.SetSymbols(m_model.Symbols());
 }

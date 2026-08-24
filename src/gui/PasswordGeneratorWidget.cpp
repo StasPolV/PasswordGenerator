@@ -2,14 +2,18 @@
 
 #include "PasswordLengthWidget.h"
 
+#include <QAbstractButton>
 #include <QButtonGroup>
 #include <QCheckBox>
 #include <QClipboard>
 #include <QGuiApplication>
 #include <QHBoxLayout>
 #include <QLineEdit>
+#include <QSignalBlocker>
 #include <QToolButton>
 #include <QVBoxLayout>
+
+#include <algorithm>
 
 PasswordGeneratorWidget::PasswordGeneratorWidget(QWidget* parent) : QWidget(parent)
 {
@@ -23,13 +27,14 @@ PasswordGeneratorWidget::PasswordGeneratorWidget(QWidget* parent) : QWidget(pare
 	m_password_enter = new QLineEdit(this);
 	m_password_enter->setMaximumHeight(100);
 	m_password_enter->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+	m_password_enter->setReadOnly(true);
 	QToolButton* create_button = new QToolButton(this);
 	create_button->setMaximumHeight(100);
 	create_button->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 	QToolButton* copy_button = new QToolButton(this);
 	copy_button->setMaximumHeight(100);
 
-	connect(create_button, &QToolButton::pressed, this,
+	connect(create_button, &QToolButton::clicked, this,
 	        &PasswordGeneratorWidget::GenerateRequested);
 
 	copy_button->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
@@ -45,76 +50,115 @@ PasswordGeneratorWidget::PasswordGeneratorWidget(QWidget* parent) : QWidget(pare
 	password_layout->addWidget(create_button, 1);
 	password_layout->addWidget(copy_button, 1);
 
-	PasswordLengthWidget* length_widget = new PasswordLengthWidget(this);
-	connect(length_widget, &PasswordLengthWidget::LengthChanged, this,
+	m_length_widget = new PasswordLengthWidget(this);
+	connect(m_length_widget, &PasswordLengthWidget::LengthChanged, this,
 	        &PasswordGeneratorWidget::LengthChanged);
 
 	main_layout->addLayout(password_layout);
-	main_layout->addWidget(length_widget);
+	main_layout->addWidget(m_length_widget);
 
-	QButtonGroup* checkbox_group = new QButtonGroup(this);
-	checkbox_group->setExclusive(false);
-	QCheckBox* check_upper = new QCheckBox("Uppercase", this);
-	QCheckBox* check_lower = new QCheckBox("Lower Case", this);
-	QCheckBox* check_digits = new QCheckBox("Digits", this);
-	QCheckBox* check_symbols = new QCheckBox("Symbols", this);
-	checkbox_group->addButton(check_upper);
-	checkbox_group->addButton(check_lower);
-	checkbox_group->addButton(check_digits);
-	checkbox_group->addButton(check_symbols);
-	for (auto button : checkbox_group->buttons())
+	m_checkbox_group = new QButtonGroup(this);
+	m_checkbox_group->setExclusive(false);
+	m_check_upper = new QCheckBox("Uppercase", this);
+	m_check_lower = new QCheckBox("Lower Case", this);
+	m_check_digits = new QCheckBox("Digits", this);
+	m_check_symbols = new QCheckBox("Symbols", this);
+	m_checkbox_group->addButton(m_check_upper);
+	m_checkbox_group->addButton(m_check_lower);
+	m_checkbox_group->addButton(m_check_digits);
+	m_checkbox_group->addButton(m_check_symbols);
+	for (auto* button : m_checkbox_group->buttons())
 	{
 		button->setChecked(true);
 	}
 
-	connect(check_upper, &QCheckBox::checkStateChanged, this,
+	connect(m_check_upper, &QCheckBox::checkStateChanged, this,
 	        &PasswordGeneratorWidget::UpperChanged);
-	connect(check_lower, &QCheckBox::checkStateChanged, this,
+	connect(m_check_lower, &QCheckBox::checkStateChanged, this,
 	        &PasswordGeneratorWidget::LowerChanged);
-	connect(check_digits, &QCheckBox::checkStateChanged, this,
+	connect(m_check_digits, &QCheckBox::checkStateChanged, this,
 	        &PasswordGeneratorWidget::DigitsChanged);
-	connect(check_symbols, &QCheckBox::checkStateChanged, this,
+	connect(m_check_symbols, &QCheckBox::checkStateChanged, this,
 	        &PasswordGeneratorWidget::SymbolsChanged);
 
 	QHBoxLayout* checkboxes_layout = new QHBoxLayout;
 	checkboxes_layout->setContentsMargins(0, 0, 0, 0);
 	checkboxes_layout->setSpacing(0);
-	checkboxes_layout->addWidget(check_upper);
-	checkboxes_layout->addWidget(check_lower);
-	checkboxes_layout->addWidget(check_digits);
-	checkboxes_layout->addWidget(check_symbols);
+	checkboxes_layout->addWidget(m_check_upper);
+	checkboxes_layout->addWidget(m_check_lower);
+	checkboxes_layout->addWidget(m_check_digits);
+	checkboxes_layout->addWidget(m_check_symbols);
 
 	main_layout->addLayout(checkboxes_layout);
 
-	const auto buttons = checkbox_group->buttons();
-	for (auto* btn : buttons)
+	const auto buttons = m_checkbox_group->buttons();
+	for (auto* button : buttons)
 	{
-		connect(btn, &QAbstractButton::toggled, this,
-		        [this, btn, checkbox_group](bool checked)
-		        {
-			        if (!checked)
-			        {
-				        bool any_checked = false;
-				        for (auto* b : checkbox_group->buttons())
-				        {
-					        if (b->isChecked())
-					        {
-						        any_checked = true;
-						        break;
-					        }
-				        }
-				        if (!any_checked)
-				        {
-					        btn->blockSignals(true);
-					        btn->setChecked(true);
-					        btn->blockSignals(false);
-				        }
-			        }
-		        });
+		connect(button, &QAbstractButton::toggled, this,
+		        [this]() { UpdateCheckboxAvailability(); });
 	}
+
+	UpdateCheckboxAvailability();
 }
 
 void PasswordGeneratorWidget::SetPassword(QString password)
 {
 	m_password_enter->setText(password);
+}
+
+void PasswordGeneratorWidget::SetLengthRange(int min_length, int max_length)
+{
+	m_length_widget->SetRange(min_length, max_length);
+}
+
+void PasswordGeneratorWidget::SetLength(int length)
+{
+	m_length_widget->SetValue(length);
+}
+
+void PasswordGeneratorWidget::SetUpperCase(bool upper_case)
+{
+	SetCheckboxSilently(m_check_upper, upper_case);
+}
+
+void PasswordGeneratorWidget::SetLowerCase(bool lower_case)
+{
+	SetCheckboxSilently(m_check_lower, lower_case);
+}
+
+void PasswordGeneratorWidget::SetDigits(bool digits)
+{
+	SetCheckboxSilently(m_check_digits, digits);
+}
+
+void PasswordGeneratorWidget::SetSymbols(bool symbols)
+{
+	SetCheckboxSilently(m_check_symbols, symbols);
+}
+
+void PasswordGeneratorWidget::SetCheckboxSilently(QCheckBox* checkbox, bool checked)
+{
+	{
+		const QSignalBlocker blocker(checkbox);
+		checkbox->setChecked(checked);
+	}
+
+	UpdateCheckboxAvailability();
+}
+
+void PasswordGeneratorWidget::UpdateCheckboxAvailability()
+{
+	const auto buttons = m_checkbox_group->buttons();
+	const auto checked_count =
+	        std::count_if(buttons.cbegin(), buttons.cend(),
+	                      [](const QAbstractButton* button) { return button->isChecked(); });
+
+	for (auto* button : buttons)
+	{
+		const bool is_last_checked = (checked_count == 1) && button->isChecked();
+
+		button->setEnabled(!is_last_checked);
+		button->setToolTip(is_last_checked ? tr("At least one character set must remain enabled")
+		                                   : QString());
+	}
 }

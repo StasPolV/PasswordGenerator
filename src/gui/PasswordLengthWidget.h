@@ -1,7 +1,9 @@
 #pragma once
 
-#include <QObject>
 #include <QWidget>
+
+class QSlider;
+class QSpinBox;
 
 class PasswordLengthWidget : public QWidget
 {
@@ -13,5 +15,10 @@ signals:
 public:
 	explicit PasswordLengthWidget(QWidget* parent = nullptr);
 
+	void SetRange(int min_value, int max_value);
+	void SetValue(int value);
+
 private:
+	QSpinBox* m_spin_box;
+	QSlider* m_slider;
 };
