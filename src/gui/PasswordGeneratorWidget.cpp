@@ -4,6 +4,8 @@
 
 #include <QButtonGroup>
 #include <QCheckBox>
+#include <QClipboard>
+#include <QGuiApplication>
 #include <QHBoxLayout>
 #include <QLineEdit>
 #include <QToolButton>
@@ -32,6 +34,12 @@ PasswordGeneratorWidget::PasswordGeneratorWidget(QWidget* parent) : QWidget(pare
 
 	copy_button->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 	copy_button->setText("Copy");
+	connect(copy_button, &QToolButton::clicked, this,
+	        [this]()
+	        {
+		        QClipboard* clipboard = QGuiApplication::clipboard();
+		        clipboard->setText(m_password_enter->text());
+	        });
 
 	password_layout->addWidget(m_password_enter, 3);
 	password_layout->addWidget(create_button, 1);
