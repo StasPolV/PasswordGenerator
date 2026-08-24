@@ -7,6 +7,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 set(CMAKE_AUTORCC ON)
 
+option(PASSWORD_GENERATOR_BUILD_TESTS "Build the unit tests" ON)
+
 find_package(Qt6 REQUIRED COMPONENTS Core Widgets)
 qt_standard_project_setup()
 
@@ -18,3 +20,8 @@ add_subdirectory(src/controller)
 
 target_link_libraries(PasswordGenerator PRIVATE GUI Controller Model Qt6::Core
                                                 Qt6::Widgets)
+
+if(PASSWORD_GENERATOR_BUILD_TESTS)
+  enable_testing()
+  add_subdirectory(tests)
+endif()
