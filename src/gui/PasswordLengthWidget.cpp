@@ -22,4 +22,7 @@ PasswordLengthWidget::PasswordLengthWidget(QWidget* parent) : QWidget(parent)
 	layout->addWidget(label, 1);
 	layout->addWidget(spin_box, 1);
 	layout->addWidget(slider, 3);
+
+	connect(spin_box, &QSpinBox::valueChanged, this, &PasswordLengthWidget::LengthChanged);
+	connect(slider, &QSlider::valueChanged, this, &PasswordLengthWidget::LengthChanged);
 }
