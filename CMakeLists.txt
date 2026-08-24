@@ -10,7 +10,7 @@ set(CMAKE_AUTORCC ON)
 find_package(Qt6 REQUIRED COMPONENTS Core Widgets)
 qt_standard_project_setup()
 
-qt_add_executable(PasswordGenerator src/main.cpp)
+qt_add_executable(PasswordGenerator src/main.cpp resources/resources.qrc)
 
 add_subdirectory(src/model)
 add_subdirectory(src/gui)

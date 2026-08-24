@@ -8,22 +8,25 @@
 
 PasswordLengthWidget::PasswordLengthWidget(QWidget* parent) : QWidget(parent)
 {
-	QLabel* label = new QLabel("Password Length: ", this);
+	QLabel* label = new QLabel(tr("Password length"), this);
 
 	m_spin_box = new QSpinBox(this);
 	m_spin_box->setKeyboardTracking(false);
+	m_spin_box->setAlignment(Qt::AlignCenter);
+	m_spin_box->setFixedWidth(62);
 
 	m_slider = new QSlider(Qt::Orientation::Horizontal, this);
+	m_slider->setPageStep(1);
 
 	connect(m_spin_box, &QSpinBox::valueChanged, m_slider, &QSlider::setValue);
 	connect(m_slider, &QSlider::valueChanged, m_spin_box, &QSpinBox::setValue);
 
 	QHBoxLayout* layout = new QHBoxLayout(this);
 	layout->setContentsMargins(0, 0, 0, 0);
-	layout->setSpacing(0);
-	layout->addWidget(label, 1);
-	layout->addWidget(m_spin_box, 1);
-	layout->addWidget(m_slider, 3);
+	layout->setSpacing(10);
+	layout->addWidget(label);
+	layout->addWidget(m_slider, 1);
+	layout->addWidget(m_spin_box);
 
 	connect(m_spin_box, &QSpinBox::valueChanged, this, &PasswordLengthWidget::LengthChanged);
 }

@@ -10,35 +10,54 @@
 #include <QHBoxLayout>
 #include <QLineEdit>
 #include <QSignalBlocker>
+#include <QStyle>
 #include <QToolButton>
 #include <QVBoxLayout>
 
 #include <algorithm>
 
+namespace
+{
+	constexpr int kControlHeight = 32;
+	constexpr int kButtonWidth = 44;
+}  // namespace
+
 PasswordGeneratorWidget::PasswordGeneratorWidget(QWidget* parent) : QWidget(parent)
 {
+	setObjectName("PasswordGeneratorWindow");
+	setWindowTitle(tr("Password Generator"));
+	setMinimumWidth(460);
+
 	QVBoxLayout* main_layout = new QVBoxLayout(this);
-	main_layout->setSpacing(5);
+	main_layout->setContentsMargins(14, 14, 14, 14);
+	main_layout->setSpacing(12);
 
 	QHBoxLayout* password_layout = new QHBoxLayout;
 	password_layout->setContentsMargins(0, 0, 0, 0);
-	password_layout->setSpacing(0);
+	password_layout->setSpacing(6);
 
 	m_password_enter = new QLineEdit(this);
-	m_password_enter->setMaximumHeight(100);
-	m_password_enter->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+	m_password_enter->setObjectName("PasswordField");
 	m_password_enter->setReadOnly(true);
+	m_password_enter->setFixedHeight(kControlHeight);
+	m_password_enter->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+
 	QToolButton* create_button = new QToolButton(this);
-	create_button->setMaximumHeight(100);
-	create_button->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+	create_button->setObjectName("GenerateButton");
+	create_button->setIcon(style()->standardIcon(QStyle::SP_BrowserReload));
+	create_button->setIconSize(QSize(16, 16));
+	create_button->setToolTip(tr("Generate a new password"));
+	create_button->setFixedSize(kButtonWidth, kControlHeight);
+
 	QToolButton* copy_button = new QToolButton(this);
-	copy_button->setMaximumHeight(100);
+	copy_button->setObjectName("CopyButton");
+	copy_button->setText(tr("Copy"));
+	copy_button->setToolTip(tr("Copy the password to the clipboard"));
+	copy_button->setFixedHeight(kControlHeight);
 
 	connect(create_button, &QToolButton::clicked, this,
 	        &PasswordGeneratorWidget::GenerateRequested);
 
-	copy_button->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-	copy_button->setText("Copy");
 	connect(copy_button, &QToolButton::clicked, this,
 	        [this]()
 	        {
@@ -46,9 +65,9 @@ PasswordGeneratorWidget::PasswordGeneratorWidget(QWidget* parent) : QWidget(pare
 		        clipboard->setText(m_password_enter->text());
 	        });
 
-	password_layout->addWidget(m_password_enter, 3);
-	password_layout->addWidget(create_button, 1);
-	password_layout->addWidget(copy_button, 1);
+	password_layout->addWidget(m_password_enter, 1);
+	password_layout->addWidget(create_button);
+	password_layout->addWidget(copy_button);
 
 	m_length_widget = new PasswordLengthWidget(this);
 	connect(m_length_widget, &PasswordLengthWidget::LengthChanged, this,
@@ -83,11 +102,12 @@ PasswordGeneratorWidget::PasswordGeneratorWidget(QWidget* parent) : QWidget(pare
 
 	QHBoxLayout* checkboxes_layout = new QHBoxLayout;
 	checkboxes_layout->setContentsMargins(0, 0, 0, 0);
-	checkboxes_layout->setSpacing(0);
+	checkboxes_layout->setSpacing(14);
 	checkboxes_layout->addWidget(m_check_upper);
 	checkboxes_layout->addWidget(m_check_lower);
 	checkboxes_layout->addWidget(m_check_digits);
 	checkboxes_layout->addWidget(m_check_symbols);
+	checkboxes_layout->addStretch(1);
 
 	main_layout->addLayout(checkboxes_layout);
 

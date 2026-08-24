@@ -1,0 +1,138 @@
+/* Base typography and text colour, inherited by every widget.
+   Deliberately no background-color here: a blanket QWidget background
+   repaints internals of composite widgets and breaks their look. */
+QWidget
+{
+	color: #33302b;
+	font-family: "Segoe UI", "Helvetica Neue", "DejaVu Sans", sans-serif;
+	font-size: 10pt;
+}
+
+QWidget#PasswordGeneratorWindow
+{
+	background-color: #f2efe9;
+}
+
+QLabel
+{
+	color: #55504a;
+}
+
+/* Password output */
+
+QLineEdit#PasswordField
+{
+	background-color: #fdfcfa;
+	border: 1px solid #bdb7ab;
+	border-radius: 2px;
+	padding: 5px 8px;
+	color: #2b2823;
+	font-family: "Consolas", "DejaVu Sans Mono", "Menlo", monospace;
+	font-size: 12pt;
+	selection-background-color: #c9c0ad;
+	selection-color: #2b2823;
+}
+
+QLineEdit#PasswordField:focus
+{
+	border: 1px solid #8a8175;
+}
+
+/* Buttons */
+
+QToolButton
+{
+	background-color: #e6e1d7;
+	border: 1px solid #bdb7ab;
+	border-radius: 2px;
+	padding: 5px 10px;
+	color: #3a3630;
+}
+
+QToolButton:hover
+{
+	background-color: #ded8cc;
+}
+
+QToolButton:pressed
+{
+	background-color: #cfc8b9;
+}
+
+QToolButton:focus
+{
+	border: 1px solid #8a8175;
+}
+
+/* Length controls */
+
+QSpinBox
+{
+	background-color: #fdfcfa;
+	border: 1px solid #bdb7ab;
+	border-radius: 2px;
+	padding: 3px 4px;
+	min-height: 20px;
+}
+
+QSpinBox:focus
+{
+	border: 1px solid #8a8175;
+}
+
+QSlider
+{
+	min-height: 24px;
+}
+
+QSlider::groove:horizontal
+{
+	height: 4px;
+	background: #ddd7cb;
+	border: 1px solid #c6c0b4;
+	border-radius: 2px;
+}
+
+QSlider::sub-page:horizontal
+{
+	background: #9a9184;
+	border: 1px solid #8a8175;
+	border-radius: 2px;
+}
+
+QSlider::handle:horizontal
+{
+	width: 12px;
+	margin: -5px 0;
+	background: #fbfaf8;
+	border: 1px solid #8a8175;
+	border-radius: 3px;
+}
+
+QSlider::handle:horizontal:hover
+{
+	background: #efece5;
+}
+
+/* Character set toggles.
+   The ::indicator sub-control is intentionally left alone: styling it
+   without supplying images makes the checkmark disappear. */
+
+QCheckBox
+{
+	spacing: 6px;
+	padding: 2px 0px;
+}
+
+QCheckBox:disabled
+{
+	color: #a49d91;
+}
+
+QToolTip
+{
+	background-color: #3a3630;
+	color: #f2efe9;
+	border: 1px solid #2b2823;
+	padding: 3px 6px;
+}
